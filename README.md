@@ -1,5 +1,7 @@
 # Market Correlation Analysis
 
+![App Preview](preview.png)
+
 A professional Python-based tool to analyze correlations between various financial markets (Currencies, Fixed Income, Commodities, Cryptocurrencies, and Indices) using real-time data from Yahoo Finance.
 
 ## 🚀 Features
