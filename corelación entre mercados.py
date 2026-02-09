@@ -9,31 +9,31 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.patches as patches
 import numpy as np
 
-# --- CONFIGURACIÓN DE ACTIVOS ---
+# --- ASSET CONFIGURATION ---
 activos = {
-    # Divisas y Renta Fija
-    "6B (Libra)": "6B=F", "ZN (10Y Bond)": "ZN=F", "6J (Yen)": "6J=F", 
-    "6E (Euro)": "6E=F", "6S (Franco S.)": "6S=F", "6N (NZD)": "6N=F", 
+    # Currencies & Fixed Income
+    "6B (Pound)": "6B=F", "ZN (10Y Bond)": "ZN=F", "6J (Yen)": "6J=F", 
+    "6E (Euro)": "6E=F", "6S (Swiss Franc)": "6S=F", "6N (NZD)": "6N=F", 
     "6A (AUD)": "6A=F", "6C (CAD)": "6C=F", "ZT (2Y Bond)": "ZT=F",
-    # Granos y Carnes
-    "ZW (Trigo)": "ZW=F", "ZS (Soja)": "ZS=F", "ZC (Maíz)": "ZC=F",
-    "ZM (Harina Soja)": "ZM=F", "ZL (Aceite Soja)": "ZL=F",
-    "LE (Ganado Vivo)": "LE=F", "HE (Cerdo)": "HE=F",
-    # Cripto y Metales
-    "BTC": "BTC-USD", "ETH": "ETH-USD", "GC (Oro)": "GC=F", 
-    "SI (Plata)": "SI=F", "HG (Cobre)": "HG=F", "PL (Platino)": "PL=F",
-    # Energías
-    "CL (Crudo WTI)": "CL=F", "RB (Gasolina)": "RB=F", 
-    "NG (Gas Nat)": "NG=F", "HO (Heating Oil)": "HO=F",
-    # Índices Bursátiles
+    # Grains & Meats
+    "ZW (Wheat)": "ZW=F", "ZS (Soybean)": "ZS=F", "ZC (Corn)": "ZC=F",
+    "ZM (Soy Meal)": "ZM=F", "ZL (Soy Oil)": "ZL=F",
+    "LE (Live Cattle)": "LE=F", "HE (Lean Hogs)": "HE=F",
+    # Crypto & Metals
+    "BTC": "BTC-USD", "ETH": "ETH-USD", "GC (Gold)": "GC=F", 
+    "SI (Silver)": "SI=F", "HG (Copper)": "HG=F", "PL (Platinum)": "PL=F",
+    # Energies
+    "CL (WTI Crude)": "CL=F", "RB (Gasoline)": "RB=F", 
+    "NG (Nat Gas)": "NG=F", "HO (Heating Oil)": "HO=F",
+    # Stock Indices
     "ES (S&P 500)": "ES=F", "NQ (Nasdaq)": "NQ=F", 
     "YM (Dow Jones)": "YM=F", "RTY (Russell)": "RTY=F"
 }
 
 def obtener_datos():
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Descargando datos de {len(activos)} mercados...")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Downloading data for {len(activos)} markets...")
     try:
-        # Descargamos 6 meses para que la correlación de 60 días (3 meses) tenga sentido
+        # Download 6 months so 60-day correlation (3 months) makes sense
         downloaded = yf.download(list(activos.values()), period="6mo", interval="1d", progress=False)
         if 'Close' in downloaded.columns:
             data = downloaded['Close']
@@ -42,88 +42,88 @@ def obtener_datos():
         else:
             data = downloaded.iloc[:, 0] 
     except Exception as e:
-        print(f"Error descargando datos: {e}")
+        print(f"Error downloading data: {e}")
         return None, None
 
-    # Renombrar columnas
+    # Rename columns
     inv_map = {v: k for k, v in activos.items()}
     data = data.rename(columns=inv_map)
     
-    # Cálculo de matrices
+    # Calculate matrices
     corr_15d = data.pct_change(15).dropna().corr()
-    corr_60d = data.pct_change(60).dropna().corr() # 60 días ~ 3 meses de mercado
+    corr_60d = data.pct_change(60).dropna().corr() # 60 days ~ 3 months of market
     
     return corr_15d, corr_60d
 
 class CorrelationApp:
     def __init__(self, root, corr_15d, corr_60d):
         self.root = root
-        self.root.title(f"Análisis de Correlaciones - {datetime.now().strftime('%d/%m/%Y')}")
+        self.root.title(f"Market Correlation Analysis - {datetime.now().strftime('%m/%d/%Y')}")
         
         self.corr_15d = corr_15d
         self.corr_60d = corr_60d
         self.assets = list(corr_15d.columns)
         
-        # --- NOTEBOOK (PESTAÑAS) ---
+        # --- NOTEBOOK (TABS) ---
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill=tk.BOTH, expand=True)
         
-        # Pestaña 1: Matriz 15 Días
+        # Tab 1: 15-Day Matrix
         self.tab_15d = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_15d, text="Matriz 15 Días")
-        self.setup_heatmap_tab(self.tab_15d, self.corr_15d, "15 días")
+        self.notebook.add(self.tab_15d, text="15-Day Matrix")
+        self.setup_heatmap_tab(self.tab_15d, self.corr_15d, "15 Days")
         
-        # Pestaña 2: Matriz 3 Meses
+        # Tab 2: 3-Month Matrix
         self.tab_60d = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_60d, text="Matriz 3 Meses")
-        self.setup_heatmap_tab(self.tab_60d, self.corr_60d, "3 meses (60 días)")
+        self.notebook.add(self.tab_60d, text="3-Month Matrix")
+        self.setup_heatmap_tab(self.tab_60d, self.corr_60d, "3 Months (60 Days)")
 
-        # Pestaña 3: Comparativa Temporal (Diferencia)
+        # Tab 3: Temporal Comparison (Difference)
         self.tab_diff = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_diff, text="Comparativa (15d vs 3m)")
+        self.notebook.add(self.tab_diff, text="Comparison (15d vs 3m)")
         self.setup_diff_tab()
         
-        # Pestaña 4: Correlaciones Fuertes (basada en 15 días)
+        # Tab 4: Strong Correlations (based on 15 days)
         self.tab_strong = ttk.Frame(self.notebook)
-        self.notebook.add(self.tab_strong, text="Correlaciones Fuertes")
+        self.notebook.add(self.tab_strong, text="Strong Correlations")
         self.setup_strong_corr_tab()
 
     def setup_diff_tab(self):
-        # Calcular la matriz de diferencia
+        # Calculate difference matrix
         self.diff_matrix = self.corr_15d - self.corr_60d
         
         container = ttk.Frame(self.tab_diff, padding="10")
         container.pack(fill=tk.BOTH, expand=True)
 
-        # --- FRAME DE CONTROLES ---
+        # --- CONTROLS FRAME ---
         control_frame = ttk.Frame(container, padding="5")
         control_frame.pack(side=tk.TOP, fill=tk.X)
 
         style = ttk.Style()
         style.configure("Bold.TLabel", font=("Segoe UI", 10, "bold"))
         
-        ttk.Label(control_frame, text="Activo A:", style="Bold.TLabel").pack(side=tk.LEFT, padx=5)
+        ttk.Label(control_frame, text="Asset A:", style="Bold.TLabel").pack(side=tk.LEFT, padx=5)
         self.diff_combo1 = ttk.Combobox(control_frame, values=self.assets, state="readonly", width=20)
         self.diff_combo1.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(control_frame, text="Activo B:", style="Bold.TLabel").pack(side=tk.LEFT, padx=5)
+        ttk.Label(control_frame, text="Asset B:", style="Bold.TLabel").pack(side=tk.LEFT, padx=5)
         self.diff_combo2 = ttk.Combobox(control_frame, values=self.assets, state="readonly", width=20)
         self.diff_combo2.pack(side=tk.LEFT, padx=5)
 
-        self.diff_result_label = ttk.Label(control_frame, text=" Seleccione activos para comparar ", font=("Segoe UI", 11, "bold"))
+        self.diff_result_label = ttk.Label(control_frame, text=" Select assets to compare ", font=("Segoe UI", 11, "bold"))
         self.diff_result_label.pack(side=tk.LEFT, padx=20)
 
-        # Eventos para los selectores
+        # Selector events
         self.diff_combo1.bind("<<ComboboxSelected>>", self.update_diff_view)
         self.diff_combo2.bind("<<ComboboxSelected>>", self.update_diff_view)
 
-        # Información de contexto
+        # Context info
         lbl_info = ttk.Label(container, 
-                             text="Diferencia: [15 Días] - [3 Meses]  |  Verde: Sube Correlación  |  Rojo: Baja Correlación",
+                             text="Difference: [15 Days] - [3 Months]  |  Green: Correlation Increasing  |  Red: Correlation Decreasing",
                              font=("Segoe UI", 9, "italic"))
         lbl_info.pack(anchor=tk.W, pady=5)
 
-        # --- FRAME DEL GRÁFICO ---
+        # --- PLOT FRAME ---
         plot_frame = ttk.Frame(container)
         plot_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -141,14 +141,14 @@ class CorrelationApp:
             center=0, 
             linewidths=.5, 
             ax=self.diff_ax,
-            cbar_kws={"label": "Cambio en Correlación"}
+            cbar_kws={"label": "Correlation Change"}
         )
-        self.diff_ax.set_title("Evolución de Correlaciones (Corto vs Medio Plazo)", fontsize=16)
+        self.diff_ax.set_title("Correlation Evolution (Short vs Medium Term)", fontsize=16)
         self.diff_ax.tick_params(axis='x', rotation=45, labelsize=8)
         self.diff_ax.tick_params(axis='y', labelsize=8)
         self.diff_figure.tight_layout()
         
-        # Clic en el mapa
+        # Click on map
         self.diff_canvas.mpl_connect('button_press_event', self.on_diff_click)
 
     def on_diff_click(self, event):
@@ -168,18 +168,18 @@ class CorrelationApp:
             v60 = self.corr_60d.loc[a1, a2]
             diff = self.diff_matrix.loc[a1, a2]
             
-            # Calcular porcentaje de cambio
+            # Calculate percentage change
             if abs(v60) > 0.01:
                 pct_change = (diff / abs(v60)) * 100
                 pct_text = f"({pct_change:+.1f}%)"
             else:
-                pct_text = "(Nuevo)" if abs(diff) > 0.1 else "(Sin cambio)"
+                pct_text = "(New)" if abs(diff) > 0.1 else "(No change)"
             
             color = "#006400" if diff > 0.1 else "#8B0000" if diff < -0.1 else "black"
-            texto = f"15d: {v15:.2f}  |  3m: {v60:.2f}  |  Dif: {diff:+.2f}  {pct_text}"
+            texto = f"15d: {v15:.2f}  |  3m: {v60:.2f}  |  Diff: {diff:+.2f}  {pct_text}"
             self.diff_result_label.config(text=texto, foreground=color)
             
-            # Resaltar en el mapa
+            # Highlight on map
             if self.diff_highlight_rect:
                 self.diff_highlight_rect.remove()
             
@@ -192,7 +192,6 @@ class CorrelationApp:
             self.diff_canvas.draw()
 
     def setup_heatmap_tab(self, frame, matrix, label_text):
-        # Almacenar datos específicos en el frame para recuperarlos en eventos
         frame.matrix = matrix
         frame.highlight_rect = None
 
@@ -203,27 +202,25 @@ class CorrelationApp:
         style.configure("Bold.TLabel", font=("Segoe UI", 10, "bold"))
         style.configure("Big.TLabel", font=("Segoe UI", 14, "bold"), foreground="#333")
 
-        ttk.Label(control_frame, text="Activo A:", style="Bold.TLabel").pack(side=tk.LEFT, padx=5)
+        ttk.Label(control_frame, text="Asset A:", style="Bold.TLabel").pack(side=tk.LEFT, padx=5)
         combo1 = ttk.Combobox(control_frame, values=self.assets, state="readonly", width=20)
         combo1.pack(side=tk.LEFT, padx=5)
         
-        ttk.Label(control_frame, text="Activo B:", style="Bold.TLabel").pack(side=tk.LEFT, padx=5)
+        ttk.Label(control_frame, text="Asset B:", style="Bold.TLabel").pack(side=tk.LEFT, padx=5)
         combo2 = ttk.Combobox(control_frame, values=self.assets, state="readonly", width=20)
         combo2.pack(side=tk.LEFT, padx=5)
         
-        result_label = ttk.Label(control_frame, text=" Seleccione dos activos ", style="Big.TLabel")
+        result_label = ttk.Label(control_frame, text=" Select two assets ", style="Big.TLabel")
         result_label.pack(side=tk.LEFT, padx=30)
 
-        # Guardar referencias en el frame para poder actualizarlas
         frame.combo1 = combo1
         frame.combo2 = combo2
         frame.result_label = result_label
 
-        # Eventos
         combo1.bind("<<ComboboxSelected>>", lambda e: self.update_view_generic(frame))
         combo2.bind("<<ComboboxSelected>>", lambda e: self.update_view_generic(frame))
 
-        ttk.Button(control_frame, text="Guardar Imagen", command=lambda: self.save_image_generic(frame, label_text)).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(control_frame, text="Save Image", command=lambda: self.save_image_generic(frame, label_text)).pack(side=tk.RIGHT, padx=5)
 
         plot_frame = ttk.Frame(frame)
         plot_frame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True)
@@ -257,11 +254,11 @@ class CorrelationApp:
             center=0, 
             linewidths=.5, 
             ax=frame.ax,
-            cbar_kws={"shrink": .8, "label": "Correlación"},
+            cbar_kws={"shrink": .8, "label": "Correlation"},
             annot_kws={"size": 7}
         )
         
-        frame.ax.set_title(f"Matriz de Correlación ({label_text})", fontsize=16, pad=20)
+        frame.ax.set_title(f"Correlation Matrix ({label_text})", fontsize=16, pad=20)
         frame.ax.tick_params(axis='x', rotation=45, labelsize=8)
         frame.ax.tick_params(axis='y', labelsize=8)
         frame.figure.tight_layout()
@@ -291,7 +288,7 @@ class CorrelationApp:
             
             color = "green" if val > 0 else "red"
             if abs(val) < 0.3: color = "gray"
-            frame.result_label.config(text=f"Correlación: {val:.4f} | Similitud: {r2:.1f}%", foreground=color)
+            frame.result_label.config(text=f"Correlation: {val:.4f} | Similarity: {r2:.1f}%", foreground=color)
             
             if frame.highlight_rect:
                 frame.highlight_rect.remove()
@@ -308,77 +305,67 @@ class CorrelationApp:
 
     def save_image_generic(self, frame, label_text):
         tag = label_text.replace(" ", "_").lower()
-        filename = f"correlacion_{tag}_{datetime.now().strftime('%Y_%m_%d_%H%M')}.png"
+        filename = f"correlation_{tag}_{datetime.now().strftime('%Y_%m_%d_%H%M')}.png"
         frame.figure.savefig(filename, dpi=300, bbox_inches='tight')
-        tk.messagebox.showinfo("Guardado", f"Imagen guardada como:\n{filename}")
+        tk.messagebox.showinfo("Saved", f"Image saved as:\n{filename}")
 
     def setup_strong_corr_tab(self):
-        # Usamos la matriz de 15 días para las alertas fuertes
         corr_matrix = self.corr_15d
-        
-        # Frame contenedor
         container = ttk.Frame(self.tab_strong, padding="20")
         container.pack(fill=tk.BOTH, expand=True)
         
-        # Explicación visual
-        info_frame = ttk.LabelFrame(container, text="Leyenda", padding="10")
+        info_frame = ttk.LabelFrame(container, text="Legend", padding="10")
         info_frame.pack(fill=tk.X, pady=(0, 10))
         
         lbl_info = ttk.Label(info_frame, 
-                             text="• Se muestran TODAS las correlaciones dentro de un mismo sector (Intra-Mercado).\n"
-                                  "• Para cruces entre sectores (Inter-Mercado), se filtran las irrelevantes (0.2 a 0.5).\n"
-                                  "• R² (Similitud): Porcentaje de movimiento compartido.",
+                             text="• ALL correlations within the same sector (Intra-Market) are shown.\n"
+                                  "• For cross-sector (Inter-Market), irrelevant ones (0.2 to 0.5) are filtered out.\n"
+                                  "• R² (Similarity): Percentage of shared movement.",
                              font=("Segoe UI", 9), justify=tk.LEFT)
         lbl_info.pack(anchor=tk.W)
 
-        # Treeview para listar
-        columns = ("Par", "Corr", "R2", "Interpretación")
+        columns = ("Pair", "Corr", "R2", "Interpretation")
         tree = ttk.Treeview(container, columns=columns, show="tree headings", height=20)
         
-        # Configurar columnas
-        tree.heading("#0", text="Sector / Mercado")
-        tree.heading("Par", text="Activos Comparados")
-        tree.heading("Corr", text="Correlación (r)")
-        tree.heading("R2", text="Similitud (R²)")
-        tree.heading("Interpretación", text="Estrategia")
+        tree.heading("#0", text="Sector / Market")
+        tree.heading("Pair", text="Assets Compared")
+        tree.heading("Corr", text="Correlation (r)")
+        tree.heading("R2", text="Similarity (R²)")
+        tree.heading("Interpretation", text="Strategy")
         
         tree.column("#0", width=200, anchor="w")
-        tree.column("Par", width=200, anchor="center")
+        tree.column("Pair", width=200, anchor="center")
         tree.column("Corr", width=100, anchor="center")
         tree.column("R2", width=100, anchor="center")
-        tree.column("Interpretación", width=250, anchor="center")
+        tree.column("Interpretation", width=250, anchor="center")
         
-        # Scrollbar
         scrollbar = ttk.Scrollbar(container, orient=tk.VERTICAL, command=tree.yview)
         tree.configure(yscroll=scrollbar.set)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
-        # --- DEFINICIÓN DE SECTORES ---
+        # --- SECTOR DEFINITION ---
         cat_map = {}
         categorias_raw = {
-            "Índices Bursátiles": ["ES", "NQ", "YM", "RTY"],
-            "Energías": ["CL", "RB", "NG", "HO"],
-            "Metales": ["GC", "SI", "HG", "PL"],
-            "Cripto": ["BTC", "ETH"],
-            "Divisas": ["6B", "6J", "6E", "6S", "6N", "6A", "6C"],
-            "Bonos/Renta Fija": ["ZN", "ZT"],
-            "Agricultura (Granos)": ["ZW", "ZS", "ZC", "ZM", "ZL"],
-            "Ganadería (Carnes)": ["LE", "HE"]
+            "Stock Indices": ["ES", "NQ", "YM", "RTY"],
+            "Energies": ["CL", "RB", "NG", "HO"],
+            "Metals": ["GC", "SI", "HG", "PL"],
+            "Crypto": ["BTC", "ETH"],
+            "Currencies": ["6B", "6J", "6E", "6S", "6N", "6A", "6C"],
+            "Bonds/Fixed Income": ["ZN", "ZT"],
+            "Agriculture (Grains)": ["ZW", "ZS", "ZC", "ZM", "ZL"],
+            "Livestock (Meats)": ["LE", "HE"]
         }
         
-        # Mapeo inverso: Nombre Activo -> Categoría
         for cat, tickers in categorias_raw.items():
             for ticker_key in tickers:
                 for asset_full in self.assets:
                     if asset_full.startswith(ticker_key + " ") or asset_full == ticker_key:
                         cat_map[asset_full] = cat
 
-        # Estructura para agrupar resultados
         grouped_data = {cat: [] for cat in categorias_raw.keys()}
-        grouped_data["Inter-Mercado (Mixtos)"] = []
+        grouped_data["Inter-Market (Mixed)"] = []
 
-        # Procesar datos
         for i in range(len(self.assets)):
             for j in range(i + 1, len(self.assets)):
                 asset_a = self.assets[i]
@@ -386,40 +373,38 @@ class CorrelationApp:
                 val = corr_matrix.iloc[i, j]
                 r2 = (val ** 2) * 100
                 
-                cat_a = cat_map.get(asset_a, "Otros")
-                cat_b = cat_map.get(asset_b, "Otros")
+                cat_a = cat_map.get(asset_a, "Others")
+                cat_b = cat_map.get(asset_b, "Others")
                 
-                # Determinar etiqueta y relevancia
-                tipo = "Moderada"
+                tipo = "Moderate"
                 tag = "normal"
                 
                 if val >= 0.80:
-                    tipo = "Gemelos (Riesgo Alto)"
+                    tipo = "Twins (High Risk)"
                     tag = "pos_strong"
                 elif 0.50 <= val < 0.80:
-                    tipo = "Positiva Moderada"
+                    tipo = "Moderate Positive"
                     tag = "pos_mod"
                 elif -0.20 <= val <= 0.20:
-                    tipo = "Independientes (Diversificar)"
+                    tipo = "Independent (Diversify)"
                     tag = "null"
                 elif -0.50 < val < -0.20:
-                    tipo = "Inversa Débil"
+                    tipo = "Weak Inverse"
                     tag = "neg_weak"
                 elif -0.80 < val <= -0.50:
-                    tipo = "Inversa Moderada"
+                    tipo = "Moderate Inverse"
                     tag = "neg_mod"
                 elif val <= -0.80:
-                    tipo = "Espejo (Cobertura)"
+                    tipo = "Mirror (Hedging)"
                     tag = "neg_strong"
                 else:
-                    tipo = "Positiva Débil / Ruido"
+                    tipo = "Weak Positive / Noise"
                     tag = "weak"
 
-                # LÓGICA DE INCLUSIÓN
                 incluir = False
-                target_cat = "Inter-Mercado (Mixtos)"
+                target_cat = "Inter-Market (Mixed)"
                 
-                if cat_a == cat_b and cat_a != "Otros":
+                if cat_a == cat_b and cat_a != "Others":
                     target_cat = cat_a
                     incluir = True
                 else:
@@ -430,7 +415,6 @@ class CorrelationApp:
                     item_data = (f"{asset_a} vs {asset_b}", val, r2, tipo, tag)
                     grouped_data[target_cat].append(item_data)
 
-        # Insertar en Treeview
         for sector, items in grouped_data.items():
             if items:
                 items.sort(key=lambda x: (x[0].split(' vs ')[0], -abs(x[1])))
@@ -438,7 +422,6 @@ class CorrelationApp:
                 for pair, val, r2, tipo, tag in items:
                     tree.insert(parent_id, tk.END, values=(pair, f"{val:.2f}", f"{r2:.1f}%", tipo), tags=(tag,))
 
-        # Configurar colores
         tree.tag_configure("pos_strong", foreground="#006400", font=("Segoe UI", 9, "bold")) 
         tree.tag_configure("pos_mod", foreground="#228B22") 
         tree.tag_configure("neg_strong", foreground="#8B0000", font=("Segoe UI", 9, "bold")) 
@@ -452,8 +435,6 @@ if __name__ == "__main__":
     
     if c15 is not None:
         root = tk.Tk()
-        
-        # Aplicar tema nativo de Windows si está disponible
         style = ttk.Style(root)
         try:
             if "vista" in style.theme_names():
@@ -471,4 +452,4 @@ if __name__ == "__main__":
         app = CorrelationApp(root, c15, c60)
         root.mainloop()
     else:
-        print("No se pudieron obtener datos para generar la matriz.")
+        print("Could not obtain data to generate matrix.")

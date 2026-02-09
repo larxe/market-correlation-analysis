@@ -1,39 +1,39 @@
-# Análisis de Correlaciones entre Mercados
+# Market Correlation Analysis
 
-Una herramienta profesional desarrollada en Python para analizar las correlaciones entre diversos mercados financieros (Divisas, Renta Fija, Materias Primas, Criptomonedas e Índices) utilizando datos en tiempo real de Yahoo Finance.
+A professional Python-based tool to analyze correlations between various financial markets (Currencies, Fixed Income, Commodities, Cryptocurrencies, and Indices) using real-time data from Yahoo Finance.
 
-## 🚀 Características
+## 🚀 Features
 
-- **Multimercado:** Monitorea más de 30 activos financieros clave.
-- **Doble Horizonte Temporal:** Compara correlaciones de corto plazo (15 días) frente a medio plazo (3 meses).
-- **Análisis de Diferencias:** Visualiza cómo están evolucionando las relaciones entre activos (si se están estrechando o separando).
-- **Filtro de Correlaciones Fuertes:** Identifica automáticamente activos "Gemelos" o "Espejos" para estrategias de cobertura o diversificación.
-- **Interfaz Nativa:** Diseñada para integrarse visualmente con Windows.
-- **Exportación:** Guarda los mapas de calor como imágenes en alta resolución (.png).
+- **Multi-Market:** Monitors over 30 key financial assets.
+- **Dual Time Horizon:** Compare short-term (15 days) vs. medium-term (3 months) correlations.
+- **Difference Analysis:** Visualize how relationships between assets are evolving (converging or diverging).
+- **Strong Correlation Filter:** Automatically identifies "Twin" or "Mirror" assets for hedging or diversification strategies.
+- **Native Interface:** Designed for seamless visual integration with Windows.
+- **Export:** Save heatmaps as high-resolution images (.png).
 
-## 🛠️ Instalación
+## 🛠️ Installation
 
-### Versión Ejecutable (Recomendado)
-1. Ve a la carpeta `dist/`.
-2. Ejecuta `Analisis_Correlaciones.exe`.
-*No requiere tener Python instalado.*
+### Executable Version (Recommended)
+1. Go to the `dist/` folder.
+2. Run `Analisis_Correlaciones.exe`.
+*Does not require Python to be installed.*
 
-### Versión de Desarrollo
-Si prefieres ejecutar el código fuente:
-1. Clona el repositorio.
-2. Instala las dependencias:
+### Development Version
+If you prefer to run the source code:
+1. Clone the repository.
+2. Install dependencies:
    ```bash
    pip install yfinance pandas seaborn matplotlib numpy
    ```
-3. Ejecuta el script:
+3. Run the script:
    ```bash
    python "corelación entre mercados.py"
    ```
 
-## 📊 Estrategia de Uso
-- **Correlación > 0.80:** Los activos se mueven casi idénticos. Riesgo de duplicar exposición.
-- **Correlación < -0.80:** Los activos se mueven en sentidos opuestos. Ideal para coberturas (hedging).
-- **Correlación cercana a 0:** Activos independientes. Ideal para diversificación real de cartera.
+## 📊 Strategy Guide
+- **Correlation > 0.80:** Assets move almost identically. Risk of doubling exposure.
+- **Correlation < -0.80:** Assets move in opposite directions. Ideal for hedging.
+- **Correlation near 0:** Independent assets. Ideal for true portfolio diversification.
 
 ---
-Desarrollado para análisis técnico y cuantitativo de mercados globales.
+Developed for technical and quantitative analysis of global markets.
