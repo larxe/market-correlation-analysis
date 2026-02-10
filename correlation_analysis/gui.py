@@ -310,8 +310,7 @@ class CorrelationApp:
             r2 = (val**2) * 100
             return f"{val:.2f}\n{r2:.0f}%"
 
-        # Use .map() instead of deprecated .applymap()
-        annot_labels = state.matrix.map(format_text)
+        annot_labels = state.matrix.applymap(format_text)
 
         sns.heatmap(
             state.matrix,
