@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "market-correlation-analysis"
+version = "2.0.0"
+description = "Analyze correlations between financial markets using real-time Yahoo Finance data"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Non-Commercial Use"}
+dependencies = [
+    "yfinance>=0.2.32",
+    "pandas>=1.5.0",
+    "seaborn>=0.12.0",
+    "matplotlib>=3.6.0",
+    "numpy>=1.23.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+market-correlation = "main:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
